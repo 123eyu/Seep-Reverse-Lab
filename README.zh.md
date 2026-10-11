@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/angusdevgo/seep-reverse-lab"><img src="https://img.shields.io/badge/Release-v1.4.0-brightgreen.svg?style=for-the-badge&logo=github" alt="Release"></a>
+  <a href="https://github.com/angusdevgo/seep-reverse-lab"><img src="https://img.shields.io/badge/Release-v1.5.0-brightgreen.svg?style=for-the-badge&logo=github" alt="Release"></a>
   <a href="https://github.com/angusdevgo/seep-reverse-lab/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=for-the-badge" alt="License"></a>
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20%7C%20Linux-0078D6?style=for-the-badge&logo=windows" alt="Platform">
   <img src="https://img.shields.io/badge/Architecture-x86%20%7C%20x64%20%7C%20ARM64-orange?style=for-the-badge" alt="Architecture">
@@ -302,7 +302,21 @@ powershell -ExecutionPolicy Bypass -File .\setup\update.ps1
 > ⚠️ **更新后务必完全重启 Agent 会话**，新 Skill 与扩展才会加载。
 > 各版本变更内容见 [CHANGELOG.md](CHANGELOG.md)。
 
-### 5. 部署完备性校验（8 大维度）
+### 5. 如何卸载
+
+只移除工作台自己装的东西 —— 你的模型凭据、会话记录、以及自行添加的 MCP 条目都不会被触碰。
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1 -DryRun   # 先预览
+powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1          # 再执行
+```
+```bash
+./setup/uninstall.sh --dry-run && ./setup/uninstall.sh
+```
+
+所有受影响文件会先整体备份到 `~/.pi/agent/backup-uninstall-<时间戳>/`，用 `-Restore <目录>` 可一键还原。详见 [MANUAL/DEPLOYMENT.md](MANUAL/DEPLOYMENT.md)。
+
+### 6. 部署完备性校验（8 大维度）
 
 | 方式 | 操作 |
 |---|---|

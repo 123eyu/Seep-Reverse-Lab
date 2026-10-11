@@ -172,6 +172,10 @@ Test-CheckItem "版本" "已有用户一键更新脚本 (update.ps1 + update.sh)
     (Test-Path (Join-Path $Root 'setup\update.ps1')) -and (Test-Path (Join-Path $Root 'setup\update.sh'))
 } "更新脚本缺失，重新拉取仓库" "两个脚本在位" "$Root\setup"
 
+Test-CheckItem "版本" "一键卸载脚本 (uninstall.ps1 + uninstall.sh)" {
+    (Test-Path (Join-Path $Root 'setup\uninstall.ps1')) -and (Test-Path (Join-Path $Root 'setup\uninstall.sh'))
+} "卸载脚本缺失，重新拉取仓库" "两个脚本在位" "$Root\setup"
+
 # -----------------------------------------------------------------------------
 # 2. 知识库与战术资产
 # -----------------------------------------------------------------------------

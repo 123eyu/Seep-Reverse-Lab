@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/angusdevgo/seep-reverse-lab"><img src="https://img.shields.io/badge/Release-v1.4.0-brightgreen.svg?style=for-the-badge&logo=github" alt="Release"></a>
+  <a href="https://github.com/angusdevgo/seep-reverse-lab"><img src="https://img.shields.io/badge/Release-v1.5.0-brightgreen.svg?style=for-the-badge&logo=github" alt="Release"></a>
   <a href="https://github.com/angusdevgo/seep-reverse-lab/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=for-the-badge" alt="License"></a>
   <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20Android%20%7C%20Linux-0078D6?style=for-the-badge&logo=windows" alt="Platform">
   <img src="https://img.shields.io/badge/Architecture-x86%20%7C%20x64%20%7C%20ARM64-orange?style=for-the-badge" alt="Architecture">
@@ -305,7 +305,21 @@ It will: stash local changes → `git pull` → print the changelog → back up 
 > ⚠️ **Always fully restart your Agent session** after updating so the new skills and extensions load.
 > See [CHANGELOG.md](CHANGELOG.md) for what changed in each version.
 
-### 5. Verify Your Deployment
+### 5. Uninstalling
+
+Removes only what the workbench itself installed. Your model credentials, sessions and any MCP servers you added yourself are never touched.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1 -DryRun   # preview first
+powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1          # then run
+```
+```bash
+./setup/uninstall.sh --dry-run && ./setup/uninstall.sh
+```
+
+Everything affected is backed up to `~/.pi/agent/backup-uninstall-<timestamp>/` first, and `-Restore <dir>` reverses the operation. See [MANUAL/DEPLOYMENT.md](MANUAL/DEPLOYMENT.md).
+
+### 6. Verify Your Deployment
 
 Run the 7-section health verifier (37 checks) using any of these methods:
 

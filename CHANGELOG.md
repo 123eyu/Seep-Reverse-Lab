@@ -8,6 +8,58 @@
 
 ---
 
+## [1.5.0] — 2026-10-11
+
+### 新增
+
+- **🗑️ 一键卸载脚本**（`setup/uninstall.ps1` / `setup/uninstall.sh`）—— 回应 Issue #8
+  - 原则：**只移除工作台自己装的东西，绝不碰你的数据**
+  - 移除范围：工作台自带的 9 大技能、`AGENTS.md` / `SYSTEM.md`、`extensions/*.ts`、
+    `mcp.json` 中的 `seep` / `js-reverse` / `playwright`、工作台加入的 12 个 packages、`lab-mode.flag`
+  - **永不触碰**：`models.json` / `auth.json` / `sessions/` / `logs/`、
+    你自己添加的 Skill 与 MCP 条目、`settings.json` 的其他字段
+  - MCP 条目采用**外科手术式**判定：只有 `args` 确实指向工作台组件时才认为归工作台所有
+  - 支持 `-DryRun` 预览、逐项 `-Keep*` 保留、`-Purge` 深度清理、`-Restore` 反向恢复
+  - 卸载前自动整体备份到 `~/.pi/agent/backup-uninstall-<时间戳>/`
+  - 手册：[MANUAL/DEPLOYMENT.md — 卸载与回滚](MANUAL/DEPLOYMENT.md)
+- **🔁 已有用户一键更新机制**（`setup/update.ps1` / `update.sh` + `VERSION` + 本 CHANGELOG）
+  - 自动 `git stash` 保护本地改动 → `git pull` → 预览变更 → 备份 → 幂等增量同步 → 校验零丢失 → 全量自检
+
+### 修复
+
+- **🚨 安装/更新会静默覆盖用户 `mcp.json`（严重）**
+  - 根因：`$raw.StartsWith([char]0xFEFF)` 在**无 BOM** 的文件上也会返回 `TRUE`。
+    .NET 默认 `StartsWith` 使用**文化敏感比较**，而 `U+FEFF`（BOM 字符）是
+    「可忽略字符」，等价于空字符串，因此**任何字符串都「以它开头」**，
+    随后的 `Substring(1)` 便削掉了首个 `{`，把合法 JSON 破坏成非法。
+  - 后果：`install-pi.ps1` 读取失败后静默回退到空配置，
+    用模板**覆盖**用户 `mcp.json`，丢失自定义 MCP 条目（如 `ida`）与真实 Playwright token。
+  - 修复：`install-pi.ps1`（mcp.json + settings.json）、`install-ida.ps1`、`update.ps1`
+    共 4 处改为序数/字符比较。
+- **🧩 3 个技能被 Agent 静默跳过**（Issue #6，由 @xiaozhi1218 报告）
+  - 根因：`safe-skills/{apk-reverse,ida-reverse,radare2}/SKILL.md` 带 UTF-8 BOM，
+    而 DSH 的 frontmatter 解析要求首行**严格等于** `---`，于是整条技能被静默丢弃（9 条只发现 6 条）。
+  - 修复：`setup/clean-format.py` 新增 Markdown / JSON **剥离 BOM** 规则（`.ps1` 仍保留 BOM），
+    并排除 `Tool/upstream/` 以保持上游镜像字节保真；共修复 8 个文件。
+  - 新增门禁：`verify.ps1` / `verify.sh` 会阻断任何带 BOM 的 `SKILL.md`，防止回归。
+- **🛑 Ctrl+C 退出时 MCP 子进程打印 KeyboardInterrupt 堆栈**（Issue #7）
+  - `seep_mcp_server.py` 现在捕获 `KeyboardInterrupt` / `BrokenPipeError` / `EOFError` 静默收尾，
+    并为 POSIX 注册 `SIGTERM` 处理器。
+- **🔌 Gemini 私有字段被注入到所有 provider（由 PR #9 @linbei0 贡献）**
+  - L1 底座级解封不再无差别写入 `safetySettings` / `config`，
+    改为**仅对 Google/Gemini 端点注入**；OpenAI 兼容网关不再返回 `400 UNKNOWN_FIELD`。
+  - 可用环境变量 `PI_SAFETY_PAYLOAD=off|all|auto` 覆盖（默认 `auto`）。
+- **🍎 macOS / Linux 自动安装 radare2（由 PR #5 @iscodeminister 贡献）**
+  - `setup/install.sh` 新增引擎探测：macOS + Homebrew 自动安装，其他平台给出清晰指引；幂等且非致命。
+- **🔒 隐私门禁改为只扫描 git 跟踪文件**
+  - 本地已 gitignore 的生成配置不再造成误报，同时更准确地反映「实际会发布的内容」。
+
+### 变更
+
+- `verify.ps1` 增至 **52 项**核心检查，`verify.sh` 增至 **51 项**。
+
+---
+
 ## [1.4.0] — 2026-09-30
 
 ### 新增
