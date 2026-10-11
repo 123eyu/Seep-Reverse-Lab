@@ -111,6 +111,18 @@ check_item "Skill" "IDA Pro 自动化联动 (ida-reverse)" test -f "$TOOL_DIR/sk
 check_item "Skill" "通用许可/卡密校验突破规范 (license-bypass)" test -f "$TOOL_DIR/skill/client-license-validation-bypass/SKILL.md"
 check_item "Skill" "独立战术安全技能包 (safe-skills 5组)" test -d "$TOOL_DIR/skill/safe-skills"
 
+# SKILL.md 带 UTF-8 BOM 时，frontmatter 解析器无法识别首行 `---`，技能会被静默跳过（Issue #6）
+test_skill_no_bom() {
+    local f first3
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        first3=$(head -c 3 "$f" 2>/dev/null | od -An -tx1 | tr -d ' \n')
+        [ "$first3" = "efbbbf" ] && return 1
+    done < <(find "$TOOL_DIR/skill" -name 'SKILL.md' 2>/dev/null)
+    return 0
+}
+check_item "Skill" "技能 SKILL.md 无 UTF-8 BOM（否则被 Agent 静默跳过）" test_skill_no_bom
+
 if [ -d "$AGENT_DIR" ]; then
     check_optn "部署" "Pi Agent 本地技能同步 (~/.pi/agent/skills/softseep)" "可运行 ./setup/install.sh 同步" test -f "$AGENT_DIR/skills/softseep/SKILL.md"
 fi
