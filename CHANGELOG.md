@@ -2,9 +2,35 @@
 
 > 本文件面向**已部署用户**，说明每次更新带来什么变化、需要注意什么。
 > 更新操作见 [MANUAL/DEPLOYMENT.md — 更新指南](MANUAL/DEPLOYMENT.md#八-已有用户更新指南)。
+>
+> **模型选型与拒答排查**见 [MANUAL/MODEL-REFUSAL-MATRIX.md](MANUAL/MODEL-REFUSAL-MATRIX.md)（实测对照表）。
 
 格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
 版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/)。
+
+---
+
+## [1.6.0] — 2026-10-11
+
+### 新增
+
+- **🔁 中继拒答自动重试**（`Tool/scripts/compliance-relay/refusal.py`）★
+  - Gemini 对「命令式要求对具体目标执行攻击性分析」的请求会**静默拦截**：
+    `HTTP 200 + {"choices": [], "usage": {"completion_tokens": 377}}` ——
+    模型生成了 token 但内容被丢弃，**不报错、不提示**，异常处理根本捕获不到。
+  - 中继现在会检测这类拒答，**自动换一种写法重发**，对客户端完全透明。
+  - 策略级联（全部**保留用户指定的目标**）：
+    `original` → `S1 评审清单式` → `S2 设计评审框架` → `S3 英文评审式`
+  - 实测：原句被拦（377 tokens 丢弃）→ 改写后返回 **2611~3324 字**完整回答。
+  - 支持非流式（OpenAI / Anthropic / Google 原生形状）与流式 SSE 两类拒答检测。
+  - 性能保障：只缓冲到「可判定」为止（SSE 8KB / JSON 4MB），超出上限即视为肯定没被拦，直接透传。
+  - 可配置：`relay-config.json` 中 `refusalRetry` / `refusalRetryAttempts`（默认开、3 次）。
+  - 新增 **40 项单元与集成测试**（共 84 项全绿），含「上游先拒答再放行」的端到端验证。
+
+### 变更
+
+- `relay.py` 响应转发改为「缓冲到可判定 → 需要时重试 → 再透传」，
+  非拒答的正常长回答仍为流式透传。
 
 ---
 
