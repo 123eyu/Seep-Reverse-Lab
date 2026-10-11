@@ -22,19 +22,63 @@ IDA Pro **8.4+ / 9.x**（含 Hex-Rays 反编译器）
    ```
 
 3. **运行 `install.ps1`** —— 它会自动探测 IDA 路径并写入 `mcp.json`。
-   若探测失败，手工填 `~/.pi/agent/mcp.json`：
-   ```json
-   "ida": {
-     "command": "<IDA安装目录>\\python311\\python.exe",
-     "args": ["<IDA安装目录>\\python311\\Lib\\site-packages\\ida_pro_mcp\\server.py"],
-     "transport": "stdio",
-     "lifecycle": "eager",
-     "requestTimeoutMs": 180000
-   }
-   ```
+   若探测失败，手工填 `~/.pi/agent/mcp.json`（见下方【两种运行模式】）。
 
 4. **使用方式**：在 pi 里说「用 IDA 分析这个文件」，`ida-reverse` Skill 会自动唤醒 IDA 并挂载 MCP
    （轮询 `http://127.0.0.1:13337` 就绪）。
+
+### 两种运行模式（IDA 9.x 起）
+
+`install-ida.ps1` 会**优先探测 IDA 9.x 原生模块模式**，失败才回退到传统脚本模式。
+
+#### 模式 A：IDA 9.x 原生 `idalib_supervisor`（推荐，无需 GUI 常驻）
+
+IDA 9.4+ 把 MCP 服务做成了可独立运行的 `idalib` 模块，由 supervisor 拉起，
+**不需要手工打开 IDA 图形界面**：
+
+```json
+"ida": {
+  "command": "<IDA安装目录>\\python311\\python.exe",
+  "args": ["-m", "ida_pro_mcp.idalib_supervisor", "--stdio"],
+  "env": { "PYTHONIOENCODING": "utf-8" },
+  "transport": "stdio",
+  "lifecycle": "eager",
+  "requestTimeoutMs": 180000
+}
+```
+
+#### 模式 B：传统 `server.py` 脚本模式（IDA 8.4 ~ 9.3）
+
+```json
+"ida": {
+  "command": "<IDA安装目录>\\python311\\python.exe",
+  "args": ["<IDA安装目录>\\python311\\Lib\\site-packages\\ida_pro_mcp\\server.py"],
+  "env": { "PYTHONIOENCODING": "utf-8" },
+  "transport": "stdio",
+  "lifecycle": "eager",
+  "requestTimeoutMs": 180000
+}
+```
+
+> 不确定用哪种？直接跑 `powershell -File .\setup\install-ida.ps1`，脚本会自动判定并打印
+> 实际选用的模式（`配置为 IDA 原生模块运行模式` 或 `配置为 server.py 脚本模式`）。
+
+#### 其他 Agent 的配置示例（DSH / Codex 风格）
+
+```yml
+- id: ida-mcp
+  name: '@deepseek-ai/dsh-mcp-client'
+  config:
+    serverName: ida
+    transport: stdio
+    command: '<IDA安装目录>\python311\python.exe'
+    args:
+      - '-m'
+      - 'ida_pro_mcp.idalib_supervisor'
+      - '--stdio'
+    env:
+      PYTHONIOENCODING: utf-8
+```
 
 ### 购买渠道
 - 官方：https://hex-rays.com/ida-pro
