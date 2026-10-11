@@ -214,7 +214,9 @@ Copy-Item "$env:USERPROFILE\.codex\config.toml" "$env:USERPROFILE\.codex\config.
 
 ### 打开 L1 可观测日志（推荐）
 
-为了避免上述盲区，扩展现在会把每次判定写进日志：
+为了避免上述盲区，扩展现在会把每次判定写进日志。**两种开关，任一满足即开启：**
+
+**方式 A：环境变量**（需重启 pi 生效）
 
 ```bash
 # Windows PowerShell
@@ -223,7 +225,24 @@ $env:PI_SAFETY_LOG="1"
 export PI_SAFETY_LOG=1
 ```
 
-默认写入 `~/.pi/agent/logs/l1-safety.log`（可用 `PI_SAFETY_LOG=<绝对路径>` 自定义）。
+**方式 B：标记文件**（**无需重启**，每次请求现读现判）
+
+```powershell
+# 开启
+New-Item -ItemType File -Force "$env:USERPROFILE\.pi\agent\l1-log.flag"
+# 关闭
+Remove-Item "$env:USERPROFILE\.pi\agent\l1-log.flag"
+```
+```bash
+# 开启
+touch ~/.pi/agent/l1-log.flag
+# 关闭
+rm ~/.pi/agent/l1-log.flag
+```
+
+> 标记文件里写入一个绝对路径，即可把日志输出到自定义位置。
+
+默认写入 `~/.pi/agent/logs/l1-safety.log`，超过 512KB 自动截断。
 
 日志格式：
 

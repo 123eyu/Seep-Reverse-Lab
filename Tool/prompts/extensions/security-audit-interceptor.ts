@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, writeFileSync, unlinkSync, appendFileSync, statSync } from "node:fs";
+import { existsSync, writeFileSync, unlinkSync, appendFileSync, statSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -236,17 +236,42 @@ function shouldInjectSafetySettings(ctx: any, payload: any): boolean {
 //   · 对「名字叫 gemini 但实际走 OpenAI 格式」的链路注入 → 字段被中转丢弃，静默无效
 // 因此把每次判定写日志，让「到底有没有生效」变成可查证的事实。
 //
-// 开关：PI_SAFETY_LOG=1（默认写入 ~/.pi/agent/logs/l1-safety.log）
-//       PI_SAFETY_LOG=<绝对路径> 可自定义位置；不设则不写。
+// 开关（两种，任一满足即开启）：
+//   · 环境变量 PI_SAFETY_LOG=1（或 =<绝对路径>）—— 需重启 pi 生效
+//   · 标记文件 ~/.pi/agent/l1-log.flag —— **无需重启**，每次请求现读现判
+//     文件内容为路径时可自定义日志位置
+// 不设则不写日志。
 // ----------------------------------------------------------------------------
 const SAFETY_LOG_MAX_BYTES = 512 * 1024;
+const SAFETY_LOG_FLAG = join(homedir(), ".pi", "agent", "l1-log.flag");
+
+function resolveSafetyLog(): { on: boolean; target: string } {
+	const fallback = join(homedir(), ".pi", "agent", "logs", "l1-safety.log");
+	let on = false;
+	let target = fallback;
+
+	const env = process.env.PI_SAFETY_LOG;
+	if (env && env !== "0" && env.toLowerCase() !== "false") {
+		on = true;
+		if (env !== "1" && env.toLowerCase() !== "true") target = env;
+	}
+
+	try {
+		if (existsSync(SAFETY_LOG_FLAG)) {
+			on = true;
+			const custom = readFileSync(SAFETY_LOG_FLAG, "utf8").trim();
+			if (custom) target = custom;
+		}
+	} catch {
+		/* 读标记失败则退回环境变量结果 */
+	}
+
+	return { on, target };
+}
 
 function logSafetyDecision(inject: boolean, ctx: any, payload: any): void {
-	const flag = process.env.PI_SAFETY_LOG;
-	if (!flag || flag === "0" || flag.toLowerCase() === "false") return;
-
-	let target = join(homedir(), ".pi", "agent", "logs", "l1-safety.log");
-	if (flag !== "1" && flag.toLowerCase() !== "true") target = flag;
+	const { on, target } = resolveSafetyLog();
+	if (!on) return;
 
 	try {
 		const api = String(ctx?.model?.api ?? "");
