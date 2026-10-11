@@ -12,6 +12,17 @@
 
 ### 新增
 
+- **🔍 L1 可观测性日志**（`security-audit-interceptor.ts`）
+  - 动机：L1 有两类**不会报错的失效方式** —— 对 OpenAI 兼容端点乱注入会 400；
+    对「名字叫 gemini 但实际走 OpenAI 格式」的链路注入则**被中转静默丢弃**。
+  - 设 `PI_SAFETY_LOG=1` 后，每次判定写入 `~/.pi/agent/logs/l1-safety.log`，
+    判定分为 `INJECT` / `SKIP` / **`SKIP-INEFFECTIVE`**（名字像 Gemini 但形状是 `messages`，
+    注入必然无效的告警）。日志超 512KB 自动截断。
+- **🧪 Gemini 安全设置验证工具**（`Tool/scripts/check-gemini-safety.py`）
+  - 用同一提示词分别以「不注入 / 注入 `BLOCK_NONE`」请求 Google 原生接口，
+    对比 `finishReason` 给出**可证伪的结论**：有效 / 无法区分 / 无效。
+  - 纯标准库，密钥仅从 `GEMINI_API_KEY` 环境变量读取，**绝不打印、绝不落盘**。
+  - 支持 `--list-models` / `--model` / `--prompt`。
 - **🗑️ 一键卸载脚本**（`setup/uninstall.ps1` / `setup/uninstall.sh`）—— 回应 Issue #8
   - 原则：**只移除工作台自己装的东西，绝不碰你的数据**
   - 移除范围：工作台自带的 9 大技能、`AGENTS.md` / `SYSTEM.md`、`extensions/*.ts`、

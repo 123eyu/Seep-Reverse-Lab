@@ -195,6 +195,72 @@ Copy-Item "$env:USERPROFILE\.codex\config.toml" "$env:USERPROFILE\.codex\config.
 
 ## 六、 边界与已知限制
 
+### ⚠️ L1 只在「Google 原生接口」上生效
+
+这是最容易踩的认知陷阱，单独说明。
+
+| 链路 | 请求体形状 | `safetySettings` 是否生效 |
+|---|---|---|
+| pi 内置 `google` provider（`api=google-generative-ai`） | `contents` | ✅ **生效** |
+| Google Vertex（`api=google-vertex`） | `contents` | ✅ **生效** |
+| **OpenAI 兼容中转**（`api=openai-completions`） | `messages` | ❌ **静默无效** |
+
+原因：`safetySettings` 是 **Google `generateContent` 原生 API 的私有字段**。
+走 OpenAI 兼容端点时，payload 里是 `messages`，中转**不认这个字段，会直接丢弃** ——
+不报错、不告警，**注入静默失效**。
+
+> 📌 **典型误判**：provider 名字里带 `gemini`，但 `api` 是 `openai-completions`（例如各种
+> `https://xxx/v1` 中转）。此时 L1 **看起来在工作，实际什么都没做**。
+
+### 打开 L1 可观测日志（推荐）
+
+为了避免上述盲区，扩展现在会把每次判定写进日志：
+
+```bash
+# Windows PowerShell
+$env:PI_SAFETY_LOG="1"
+# Linux / macOS
+export PI_SAFETY_LOG=1
+```
+
+默认写入 `~/.pi/agent/logs/l1-safety.log`（可用 `PI_SAFETY_LOG=<绝对路径>` 自定义）。
+
+日志格式：
+
+```
+时间戳  <判定>  provider=<名字>  api=<标识>  model=<模型>  shape=<形状>
+```
+
+| 判定 | 含义 |
+|---|---|
+| `INJECT` | 已注入 `BLOCK_NONE`，**这次真的生效了** |
+| `SKIP` | 非 Google 端点，原样透传（正确行为，避免 400） |
+| `SKIP-INEFFECTIVE` | ⚠️ **名字像 Gemini 但走 OpenAI 格式** —— 注入必然无效，请改用 L2 / L3 |
+
+### 独立验证工具
+
+想知道 `BLOCK_NONE` 在您当前的 Gemini 模型上**还剩多少效力**，直接跑：
+
+```bash
+python Tool/scripts/check-gemini-safety.py
+python Tool/scripts/check-gemini-safety.py --list-models
+python Tool/scripts/check-gemini-safety.py --model gemini-2.5-flash
+```
+
+它会用**同一个提示词**分别以「不注入 / 注入 `BLOCK_NONE`」请求 Google 原生接口，
+对比 `finishReason` 与是否返回正文，给出三种明确结论：
+
+| 结论 | 含义 | 下一步 |
+|---|---|---|
+| ✅ **有效** | 原本被拦的请求，注入后成功获得回答 | 继续依赖 L1 |
+| ℹ️ **无法区分** | 两者都能回答，该提示词未触发过滤 | 换一个确实会被拦的提示词重测 |
+| ❌ **无效** | 注入后依然被拦 | Google 已收紧该类别的控制，**改用 L2 / L3** |
+
+> 密钥仅从环境变量 `GEMINI_API_KEY` 读取，**绝不打印、绝不落盘**。
+> 获取地址：https://aistudio.google.com/apikey
+
+### 其他已知限制
+
 | 限制 | 说明 |
 |---|---|
 | **仅覆盖支持自定义 `baseUrl` 的客户端** | 硬编码端点的官方登录流程无法接入 |

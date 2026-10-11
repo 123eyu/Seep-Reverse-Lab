@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, writeFileSync, unlinkSync } from "node:fs";
+import { existsSync, writeFileSync, unlinkSync, appendFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -228,6 +228,54 @@ function shouldInjectSafetySettings(ctx: any, payload: any): boolean {
 	return false;
 }
 
+// ----------------------------------------------------------------------------
+// L1 可观测性日志
+//
+// 动机：L1 有两类完全相反的失效方式，而且都不会报错 ——
+//   · 对 OpenAI 兼容端点乱注入 → 网关 400（PR #9 已修）
+//   · 对「名字叫 gemini 但实际走 OpenAI 格式」的链路注入 → 字段被中转丢弃，静默无效
+// 因此把每次判定写日志，让「到底有没有生效」变成可查证的事实。
+//
+// 开关：PI_SAFETY_LOG=1（默认写入 ~/.pi/agent/logs/l1-safety.log）
+//       PI_SAFETY_LOG=<绝对路径> 可自定义位置；不设则不写。
+// ----------------------------------------------------------------------------
+const SAFETY_LOG_MAX_BYTES = 512 * 1024;
+
+function logSafetyDecision(inject: boolean, ctx: any, payload: any): void {
+	const flag = process.env.PI_SAFETY_LOG;
+	if (!flag || flag === "0" || flag.toLowerCase() === "false") return;
+
+	let target = join(homedir(), ".pi", "agent", "logs", "l1-safety.log");
+	if (flag !== "1" && flag.toLowerCase() !== "true") target = flag;
+
+	try {
+		const api = String(ctx?.model?.api ?? "");
+		const provider = String(ctx?.model?.provider ?? "");
+		const model = String(ctx?.model?.id ?? ctx?.model?.name ?? "");
+		const shape = Array.isArray(payload?.contents)
+			? "contents(gemini)"
+			: Array.isArray(payload?.messages)
+				? "messages(openai)"
+				: "unknown";
+
+		// 关键告警：provider 名字像 Gemini，但载荷却是 OpenAI 形状 —— 注入必然无效
+		let verdict = inject ? "INJECT" : "SKIP";
+		if (!inject && /gemini|google/i.test(provider + api) && shape === "messages(openai)") {
+			verdict = "SKIP-INEFFECTIVE";
+		}
+
+		const line = `${new Date().toISOString()}\t${verdict}\tprovider=${provider}\tapi=${api}\tmodel=${model}\tshape=${shape}\n`;
+
+		if (existsSync(target)) {
+			const st = statSync(target);
+			if (st.size > SAFETY_LOG_MAX_BYTES) writeFileSync(target, "", "utf8");
+		}
+		appendFileSync(target, line, "utf8");
+	} catch {
+		/* 日志失败绝不影响请求 */
+	}
+}
+
 export default function securityAuditInterceptor(pi: ExtensionAPI) {
 	// =========================================================================
 	// 1. 底座级拦截：重写 provider 请求 Payload，直接将 Gemini 的 safetySettings 置为 BLOCK_NONE
@@ -239,7 +287,13 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 
 		// 0. 目标判定：非 Google/Gemini 端点（OpenAI 兼容网关）原样透传，
 		//    否则 safetySettings / config 会被网关判为未知字段而 400。
-		if (!shouldInjectSafetySettings(ctx, payload)) return;
+		const decision = shouldInjectSafetySettings(ctx, payload);
+
+		// 0.1 可观测性：把 L1 的判定结果写日志，避免「以为在生效、其实白干」的盲区。
+		//     设 PI_SAFETY_LOG=1 开启（或 PI_SAFETY_LOG=<路径> 自定义位置）。
+		logSafetyDecision(decision, ctx, payload);
+
+		if (!decision) return;
 
 		// 1.1 强行多层注入 safetySettings 放行策略
 		payload.safetySettings = GEMINI_SAFETY_SETTINGS;
