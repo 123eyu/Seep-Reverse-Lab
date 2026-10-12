@@ -17,8 +17,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/MCP%20Tools-23%20Integrated-purple?style=for-the-badge&logo=fastapi" alt="MCP Tools">
+  <img src="https://img.shields.io/badge/Verifier-51%2F51%20Passed-brightgreen?style=for-the-badge&logo=checkmarx" alt="Verifier">
   <img src="https://img.shields.io/badge/Knowledge%20Base-289%20Journals-teal?style=for-the-badge" alt="Knowledge Base">
-  <img src="https://img.shields.io/badge/MANUAL%20SOPs-5%20Tactical%20Guides-red?style=for-the-badge" alt="MANUAL SOPs">
+  <img src="https://img.shields.io/badge/Paradigms-14%20Cases%20(A~N)-blue?style=for-the-badge" alt="Paradigms">
+  <img src="https://img.shields.io/badge/MANUAL%20SOPs-9%20Tactical%20Guides-red?style=for-the-badge" alt="MANUAL SOPs">
   <a href="https://linux.do/"><img src="https://img.shields.io/badge/Community-LINUX%20DO-23272A?style=for-the-badge&logo=discourse" alt="LINUX DO"></a>
 </p>
 
@@ -115,7 +117,7 @@ User Input (plain language — "bypass the premium check in FooBar.apk")
 ## ⚡ 30-Second Demo
 
 <p align="center">
-  <img src="docs/images/agent-workflow.png" alt="Seep Autonomous Reversing Workflow" width="850">
+  <img src="docs/images/agent-workflow.png" alt="Seep Autonomous Reversing & CWE-602 Audit Workflow" width="880">
 </p>
 
 Once deployed, just talk to your agent in plain language:
@@ -143,8 +145,10 @@ The agent autonomously:
 - 🔍 **CWE-602 Authorization Audit**: Minutes to determine if a feature gate is local-boolean or server-authoritative
 - 🛡️ **Authenticode Signature Preservation**: DLL search-order hijacking (`version.dll` / `sentry.dll`) keeps host binary signature intact
 - 🔄 **PoC Self-Healing Loop**: Frida error → root-cause mapping → auto-fix → re-execute (up to 3 attempts, then structured handoff)
-- 💎 **14 Industrial Architecture Paradigms**: Monolithic offline PE → multi-process IPC → VM arbitration → .NET keygen → weak RSA bypass → Java agent → .NET VM bypass *(fully desensitized)*
-- 🌐 **Transport-Layer Compliance Relay**: Optional localhost relay rewrites colloquial user input into compliant terminology before it leaves the machine — covering any Agent that supports a custom `baseUrl` (Pi Agent / Claude Code / Codex). Zero new dependencies, zero disk writes, context-injection guarded.
+- 💎 **14 Industrial Architecture Paradigms**: Monolithic offline PE → multi-process IPC → VM arbitration → .NET keygen → weak RSA bypass → Java agent → .NET VM bypass *(fully desensitized, Projects A through N)*
+- 🌐 **Transport-Layer Compliance Relay & Auto-Retry**: Pure stdlib localhost relay with streaming refusal auto-retry cascade (`S1-review-checklist` → `S2-review-framed` → `S3-review-en`), preserving target paths without semantic drift. Unit tests 84/84 passing.
+- ⚡ **DeepSeek Harness (DSH) Self-Healing Launcher**: 4s fast cold-start with automated zombie cleanup, web token URL extraction, and MCP verification suite (`start-dsh.ps1` / `stop-dsh.ps1`).
+- 🛡️ **Measured Anti-Refusal Defense**: Gemini-safe prompt reshaping (`gemini-safe.flag`), L1 observable decision logging (`l1-log.flag`), and native `BLOCK_NONE` payload gating.
 - 🔌 **Offline-Ready**: All toolchains pre-bundled (251 MB), zero network dependencies after setup
 
 ---
@@ -202,13 +206,18 @@ Seep\ (251 MB)
 │   └── scripts\                   ← Workspace automation scripts
 │       └── compliance-relay\      ← 🌐 Transport-layer compliance relay (stdlib-only, 3 protocols)
 │
-├── setup\                         ← Automated install, repair & self-check scripts
-└── MANUAL\                        ← 5 Tactical SOP guides
-    ├── PREREQUISITES.md           ← Environment requirements
-    ├── IDA-PRO.md                 ← Commercial IDA Pro integration guide
+├── setup\                         ← Automated install, repair, update, uninstall & verify scripts
+└── MANUAL\                        ← 9 Tactical SOP guides
+    ├── PREREQUISITES.md           ← Environment & dependency requirements
+    ├── IDA-PRO.md                 ← Commercial IDA Pro integration (native idalib + stdio modes)
     ├── ANTI-DEBUG.md              ← Anti-debug bypass dictionary & proxy DLL framework
     ├── UNPACKING.md               ← UPX/MPRESS/Themida/VMP unpacking SOP
-    └── POC-VALIDATION.md          ← Frida self-healing loop & PoC sandbox validation
+    ├── POC-VALIDATION.md          ← Frida self-healing loop & PoC sandbox validation
+    ├── DEPLOYMENT.md              ← Comprehensive deployment & multi-Agent setup guide
+    ├── DEPLOYMENT-CHECKLIST.md    ← Official deployment baseline checklist (51 items)
+    ├── CROSS-PLATFORM.md          ← Cross-platform (Windows/Linux/macOS) execution guide
+    ├── COMPLIANCE-RELAY.md        ← Transport-layer compliance relay & auto-retry architecture
+    └── MODEL-REFUSAL-MATRIX.md    ← Measured refusal matrix & Gemini-safe prompt reshaping
 ```
 
 </details>
@@ -321,7 +330,7 @@ Everything affected is backed up to `~/.pi/agent/backup-uninstall-<timestamp>/` 
 
 ### 6. Verify Your Deployment
 
-Run the 7-section health verifier (37 checks) using any of these methods:
+Run the 9-dimension health verifier (51 checks) against `MANUAL/DEPLOYMENT-CHECKLIST.md` using any of these methods:
 
 | Method | Command |
 |---|---|
@@ -330,7 +339,7 @@ Run the 7-section health verifier (37 checks) using any of these methods:
 | Agent chat | Send `check` (or `doctor` / `检查`) — agent runs and reports inline |
 
 <p align="center">
-  <img src="docs/images/verifier-check.png" alt="Seep Health Verifier Dashboard (35 Checks Passed)" width="850">
+  <img src="docs/images/verifier-check.png" alt="Seep Health Verifier Dashboard (51 Checks Passed across 9 Dimensions)" width="880">
 </p>
 
 ---
