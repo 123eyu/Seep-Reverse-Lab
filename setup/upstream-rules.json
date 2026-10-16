@@ -6,7 +6,7 @@
     "apk-reverse": {
       "name": "apk-reverse",
       "description": "移动端 G1-G4 硬性门禁、DEX 微创修补与离线单测套件",
-      "repo": "https://github.com/newliver666/apk-reverse.git",
+      "repo": "https://github.com/Jvust2/apk-reverse-Jvust.git",
       "branch": "main",
       "target_dir": "Tool/upstream/apk-reverse",
       "allowed_boundary": "Tool/upstream/apk-reverse",
