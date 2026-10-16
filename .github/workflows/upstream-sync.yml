@@ -1,4 +1,4 @@
-name: Upstream Sync & Zero-Spillover PR Automation
+name: "Upstream Sync and Zero-Spillover PR Automation"
 
 on:
   schedule:
@@ -47,8 +47,9 @@ jobs:
       - name: Process Upstream Targets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CHOSEN_TARGET: ${{ github.event.inputs.target || 'all' }}
+          INPUT_TARGET: ${{ inputs.target }}
         run: |
+          CHOSEN_TARGET="${INPUT_TARGET:-all}"
           TARGETS=("apk-reverse" "open-tgtylab" "open-reverselab")
           if [ "$CHOSEN_TARGET" != "all" ]; then
             TARGETS=("$CHOSEN_TARGET")
@@ -108,25 +109,17 @@ jobs:
             git commit -m "$COMMIT_MSG"
             git push origin "$BRANCH_NAME" --force
 
-            # 5. 创建独立 PR
-            PR_BODY="## 📦 上游定点同步公告 (${TARGET})
+            # 5. 生成 PR 说明正文并创建独立 PR
+            python setup/sync-upstream.py --make-pr-body /tmp/pr_body.md --target "$TARGET"
 
-### 🛡️ 边界隔离保障
-- **专属纳入目录**: \`Tool/upstream/${TARGET}/\`
-- **防外溢守卫 (Zero-Spillover Gate)**: ✅ 已执行严格绝对路径断言，无任何其他目录受到波及。
-- **本地定制保全**: \`README.md\` 与脱敏标识保留。
-- **单元测试**: \`setup/test_sync_upstream.py\` 100% 通过。
-
-请维护者审阅文件 Diff 后合入 \`main\`。"
-
-            # 如果 PR 已存在则更新，不存在则创建
-            EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number')
+            EXISTING_PR=$(gh pr list --head "$BRANCH_NAME" --json number --jq '.[0].number' 2>/dev/null || true)
             if [ -n "$EXISTING_PR" ]; then
-              echo "已存在针对分支 $BRANCH_NAME 的 PR (#$EXISTING_PR)，无需重复创建。"
+              echo "已存在针对分支 $BRANCH_NAME 的 PR (#$EXISTING_PR)，更新正文..."
+              gh pr edit "$EXISTING_PR" --body-file /tmp/pr_body.md
             else
               gh pr create \
                 --title "$COMMIT_MSG" \
-                --body "$PR_BODY" \
+                --body-file /tmp/pr_body.md \
                 --base main \
                 --head "$BRANCH_NAME"
               echo "成功创建针对 $TARGET 的隔离同步 PR！"

@@ -86,6 +86,24 @@ def save_sha_cache(cache_path: str, data: dict):
         json.dump(data, f, indent=2, ensure_ascii=False)
 
 
+def write_pr_body(out_path: str, target: str):
+    """生成上游定点同步的 PR 说明 Markdown 正文"""
+    body = f"""## 📦 上游定点同步公告 ({target})
+
+### 🛡️ 边界隔离保障
+- **专属纳入目录**: `Tool/upstream/{target}/`
+- **防外溢守卫 (Zero-Spillover Gate)**: ✅ 已执行严格绝对路径断言，无任何其他目录受到波及。
+- **本地定制保全**: `README.md` 与脱敏标识保留。
+- **单元测试**: `setup/test_sync_upstream.py` 100% 通过。
+
+请维护者审阅文件 Diff 后合入 `main`。
+"""
+    abs_out = os.path.abspath(out_path)
+    os.makedirs(os.path.dirname(abs_out), exist_ok=True)
+    with open(abs_out, "w", encoding="utf-8") as f:
+        f.write(body)
+
+
 def assert_within_boundary(rel_dest_path: str, allowed_boundary: str, root_dir: str):
     """
     【防外溢硬性断言】
@@ -293,7 +311,13 @@ def main():
     parser.add_argument("--check-only", "-c", action="store_true", help="仅检查远程是否有更新，不执行拉取")
     parser.add_argument("--rules", default="setup/upstream-rules.json", help="规则清单路径")
     parser.add_argument("--proxy", help="HTTP(S) 代理 URL，例如 http://127.0.0.1:7897")
+    parser.add_argument("--make-pr-body", help="生成 PR 说明 Markdown 并写入指定文件路径")
     args = parser.parse_args()
+
+    if args.make_pr_body:
+        write_pr_body(args.make_pr_body, args.target)
+        print(f"  [+] 已生成 PR 正文至: {args.make_pr_body}")
+        sys.exit(0)
 
     root_dir = get_root_dir()
     rules_path = os.path.normpath(os.path.join(root_dir, args.rules))
