@@ -24,40 +24,38 @@ import { join } from "node:path";
  */
 
 // ============================================================================
-// 实验环境开关：跨 agent 通用的磁盘标志文件（附带超时自动失效防残留机制）
+// 实验环境开关：会话级纯内存隔离（当前对话生效，其他窗口完全零干扰）
 // ============================================================================
-const LAB_FLAG_PATH = join(homedir(), ".pi", "agent", "lab-mode.flag");
-// 实验环境空闲保护：若超过 4 小时未有活跃交互，自动退出实验环境，防止日常闲聊被误伤
-const LAB_FLAG_TTL_MS = 4 * 60 * 60 * 1000;
+let isLabSessionActive = false;
 
 function isLabMode(): boolean {
-	try {
-		if (!existsSync(LAB_FLAG_PATH)) return false;
-		const st = statSync(LAB_FLAG_PATH);
-		const age = Date.now() - st.mtimeMs;
-		if (age > LAB_FLAG_TTL_MS) {
-			try { unlinkSync(LAB_FLAG_PATH); } catch {}
-			return false;
-		}
-		return true;
-	} catch {
-		return false;
-	}
-}
-
-function touchLabMode(): void {
-	try {
-		const now = new Date();
-		utimesSync(LAB_FLAG_PATH, now, now);
-	} catch {}
+	return isLabSessionActive;
 }
 
 function enterLabMode(): void {
-	try { writeFileSync(LAB_FLAG_PATH, new Date().toISOString(), "utf8"); } catch {}
+	isLabSessionActive = true;
 }
 
 function exitLabMode(): void {
-	try { unlinkSync(LAB_FLAG_PATH); } catch {}
+	isLabSessionActive = false;
+}
+
+// 动态检索 Seep 逆向与白盒审计系统提示词内容（仅当当前会话激活 Lab 模式时挂载）
+function getSeepSystemPrompt(): string {
+	const candidatePaths = [
+		join(homedir(), ".pi", "agent", "seep-system.md"),
+		join(process.cwd(), "Tool", "prompts", "SYSTEM.md"),
+		join(homedir(), ".pi", "agent", "SYSTEM.md"),
+	];
+	for (const p of candidatePaths) {
+		if (existsSync(p)) {
+			try {
+				const content = readFileSync(p, "utf-8").trim();
+				if (content) return content;
+			} catch {}
+		}
+	}
+	return "";
 }
 
 // 快捷短口令字典
@@ -441,6 +439,28 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 	});
 
 	// =========================================================================
+	// 2.5 会话级隔离：新会话启动或切换会话时重置 Lab 状态；按需动态挂载系统提示词
+	// =========================================================================
+	pi.on("session_start", async (_event, _ctx) => {
+		isLabSessionActive = false;
+	});
+
+	pi.on("before_agent_start", async (event) => {
+		// 仅在当前会话激活 Lab 模式时，动态给当前会话追加 Seep 逆向与白盒审计系统提示词
+		// 未开启时返回 undefined，保持 Pi 原生纯净编码助手提示词，零干扰其他会话与日常任务
+		if (!isLabSessionActive) {
+			return undefined;
+		}
+
+		const seepPrompt = getSeepSystemPrompt();
+		if (!seepPrompt) return undefined;
+
+		return {
+			systemPrompt: `${event.systemPrompt}\n\n${seepPrompt}`,
+		};
+	});
+
+	// =========================================================================
 	// 3. 输入层过滤：实验环境开关 + 快捷口令 + 用户输入平滑转换
 	// =========================================================================
 	pi.on("input", async (event, _ctx) => {
@@ -463,7 +483,7 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 				: "\n\n请输入第一个分析目标或任务。";
 			return {
 				action: "transform",
-				text: `[实验工作环境已开启]\n逆向工具链与敏感词映射已加载，后续任务将按白盒审计规范执行。${tail}`,
+				text: `[实验工作环境已开启（仅限当前会话）]\n当前会话已激活 Seep 逆向工程工作台与合规映射，其他会话窗口零干扰。${tail}`,
 			};
 		}
 
@@ -471,7 +491,7 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 			exitLabMode();
 			return {
 				action: "transform",
-				text: "[实验工作环境已关闭]\n敏感词替换与合规前缀已停止，恢复正常对话。",
+				text: "[实验工作环境已关闭]\n当前会话已退出工作台，恢复日常纯净对话。",
 			};
 		}
 
@@ -479,7 +499,6 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 		if (!isLabMode()) {
 			return { action: "continue" };
 		}
-		touchLabMode();
 
 		// 3.1 处理快捷短指令（方案一）
 		const firstSpaceIndex = rawText.indexOf(" ");
