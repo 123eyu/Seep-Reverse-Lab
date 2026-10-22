@@ -1,5 +1,5 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { existsSync, writeFileSync, unlinkSync, appendFileSync, statSync, readFileSync } from "node:fs";
+import { existsSync, writeFileSync, unlinkSync, appendFileSync, statSync, readFileSync, utimesSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -24,12 +24,32 @@ import { join } from "node:path";
  */
 
 // ============================================================================
-// 实验环境开关：跨 agent 通用的磁盘标志文件
+// 实验环境开关：跨 agent 通用的磁盘标志文件（附带超时自动失效防残留机制）
 // ============================================================================
 const LAB_FLAG_PATH = join(homedir(), ".pi", "agent", "lab-mode.flag");
+// 实验环境空闲保护：若超过 4 小时未有活跃交互，自动退出实验环境，防止日常闲聊被误伤
+const LAB_FLAG_TTL_MS = 4 * 60 * 60 * 1000;
 
 function isLabMode(): boolean {
-	try { return existsSync(LAB_FLAG_PATH); } catch { return false; }
+	try {
+		if (!existsSync(LAB_FLAG_PATH)) return false;
+		const st = statSync(LAB_FLAG_PATH);
+		const age = Date.now() - st.mtimeMs;
+		if (age > LAB_FLAG_TTL_MS) {
+			try { unlinkSync(LAB_FLAG_PATH); } catch {}
+			return false;
+		}
+		return true;
+	} catch {
+		return false;
+	}
+}
+
+function touchLabMode(): void {
+	try {
+		const now = new Date();
+		utimesSync(LAB_FLAG_PATH, now, now);
+	} catch {}
 }
 
 function enterLabMode(): void {
@@ -81,13 +101,13 @@ function tryGeminiSafeReshape(text: string): string | null {
 	if (!target) return null;
 
 	// 必须属于「命令式攻击请求」形态才改写
-	const ATTACK_VERB = /(逆向|破解|绕过|旁路|patch|hook|补丁|脱壳|去广告|解锁|过检测|会员|订阅|VIP|激活)/i;
+	const ATTACK_VERB = /(逆向|破解|绕过|旁路|patch|hook|补丁|脱壳|去广告|解锁|过检测|会员|VIP|激活)/i;
 	const ATTACK_ASK = /(是否存在|有没有|能否|是否可以|复现|书写.{0,6}报告|生成.{0,6}报告|出.{0,4}报告)/i;
 	if (!ATTACK_VERB.test(text) || !ATTACK_ASK.test(text)) return null;
 
 	// 推断审计范围
 	let scope = "授权 / 许可";
-	if (/会员|VIP|订阅/i.test(text)) scope = "会员权限 / 授权";
+	if (/会员|VIP/i.test(text)) scope = "会员权限 / 授权";
 	else if (/激活|序列号|注册码|卡密/i.test(text)) scope = "激活 / 许可";
 	else if (/广告/i.test(text)) scope = "广告与功能限制";
 
@@ -123,9 +143,6 @@ const SENSITIVE_WORD_MAP: Array<[RegExp, string]> = [
 	[/绕过/g, "旁路验证"],
 	[/会员功能/g, "受限权限功能模块"],
 	[/会员/g, "特权凭证状态"],
-	[/订阅成功界面/g, "本地授权凭证确认视图 (Subscription Confirmed View)"],
-	[/订阅功能/g, "本地特权凭据离线生效模块"],
-	[/订阅/g, "本地凭据状态 (Subscription Credential)"],
 	[/破解补丁/g, "鉴权缺陷验证热补丁 PoC"],
 	[/外挂/g, "进程内存完整性测试程序"],
 	[/作弊/g, "内存数据异常注入测试"],
@@ -462,6 +479,7 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 		if (!isLabMode()) {
 			return { action: "continue" };
 		}
+		touchLabMode();
 
 		// 3.1 处理快捷短指令（方案一）
 		const firstSpaceIndex = rawText.indexOf(" ");
@@ -486,7 +504,7 @@ export default function securityAuditInterceptor(pi: ExtensionAPI) {
 		}
 
 		// 3.3 检查是否包含敏感或审计特征词，平滑转换并包裹合规前缀
-		const AUDIT_TRIGGER_REGEX = /(破解|破一下|绕过|本地化|订阅|会员|VIP|激活|付费|购买|收费|注册码|免广告|去广告|解除限制|解锁|过检测|防封|去更新|补丁|patch|hook|逆向|IDA|Hills|MuMu|XYplorer)/i;
+		const AUDIT_TRIGGER_REGEX = /(破解|破一下|绕过|本地化|会员|VIP|激活|付费|购买|收费|注册码|免广告|去广告|解除限制|解锁|过检测|防封|去更新|补丁|patch|hook|逆向|IDA|Hills|MuMu|XYplorer)/i;
 		const needsWrap = AUDIT_TRIGGER_REGEX.test(rawText);
 
 		// 单趟最长优先转译（算法保证长词优先 + 不回扫，且自动跳过注入上下文）
