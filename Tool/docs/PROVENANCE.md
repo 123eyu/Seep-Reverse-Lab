@@ -166,10 +166,10 @@ Android(5)    seep_apk_info · _decompile · _unpack · _smali_search · _gen_ho
 
 | 项 | 值 |
 | :--- | :--- |
-| 路径 | `~/.pi/agent/lab-mode.flag` |
-| 写入时机 | 输入 `lab：` |
-| 删除时机 | 输入 `退出实验` |
-| 作用 | 扩展每次读此文件决定是否启用敏感词替换；**状态在磁盘，切模型/长上下文都不丢** |
+| 路径 | `~/.pi/agent/seep-system.md`（提示词，非状态） |
+| 注入时机 | 输入 `lab：` 后，由扩展在 `before_agent_start` 追加进当前会话 |
+| 复位时机 | 新会话 `session_start` 强制复位；`退出实验` 立即复位 |
+| 作用 | 状态存**扩展进程内存**（`isLabSessionActive`）；仅当前会话生效，其他窗口零影响，进程退出即销毁 |
 
 ---
 

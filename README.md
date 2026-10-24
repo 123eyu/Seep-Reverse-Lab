@@ -75,7 +75,7 @@ User Input (plain language — "bypass the premium check in FooBar.apk")
     │
     ▼
 ┌───────────────────────────────────────────────────────────────────┐
-│  Lab Mode State Machine  (disk-backed ~/.pi/agent/lab-mode.flag)  │
+│  Lab Mode  (session-scoped memory; only "lab:" in THIS session)    │
 │  • Colloquial → compliance terminology auto-mapping               │
 │  • BLOCK_NONE injection + cognitive redirection (anti-refusal)    │
 │  • Context persists across model switches & context compression   │
@@ -372,14 +372,18 @@ Run the 9-dimension health verifier (52 checks) against `MANUAL/DEPLOYMENT-CHECK
 
 ## 🎮 Workflow & Lab Mode
 
-### Lab Mode Protocol (Disk-Backed State Machine)
+### Lab Mode Protocol (Session-Scoped Trigger)
 ```
 Activate:   lab:                          # or: lab: analyze FooBar.exe
 Deactivate: exit lab
 ```
-- State stored in `~/.pi/agent/lab-mode.flag` — **persists across model switches & context compression**
-- Once activated: terminology auto-mapping, anti-refusal overrides, and shortcut expansion are live
-- Casual chat outside lab mode passes through unmodified — zero interference
+- **Trigger is explicit**: nothing activates until you type `lab:`. New sessions start clean.
+- **Isolation is session-scoped**: state lives in the extension process memory (`isLabSessionActive`),
+  reset by `session_start`. Another terminal window is unaffected, and nothing survives a restart.
+- Once activated: the Seep system prompt is appended, terminology auto-mapping, anti-refusal
+  overrides and shortcut expansion become live.
+- Outside lab mode the global `AGENTS.md` forbids loading reverse-engineering skills or calling
+  `seep_*` tools, so daily coding/ops work stays clean.
 
 ### Task Shortcuts (Active in Lab Mode)
 

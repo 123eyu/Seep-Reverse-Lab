@@ -214,7 +214,7 @@ cd <你的工作台目录>
 | `~/.pi/agent/models.json` | 你的模型凭据与自定义 provider |
 | `~/.pi/agent/auth.json` | 登录凭证 |
 | `~/.pi/agent/mcp.json` 中**你自行添加**的 MCP 条目 | 仅**增量合并**，不会删除已有项 |
-| `~/.pi/agent/lab-mode.flag` | 实验环境状态 |
+| `~/.pi/agent/seep-system.md` | 作战模式提示词（由扩展按需注入，非磁盘状态） |
 | `~/.codex/config.toml`、`.mcp.json`（项目根） | 脚本**从不**自动改写 |
 
 > 脚本只会**新增**工作台自带的标准 MCP 条目（`seep` / `js-reverse` / `playwright`），
@@ -290,7 +290,7 @@ powershell -ExecutionPolicy Bypass -File .\setup\uninstall.ps1
 | `extensions/*.ts` | **你自己添加的** Skill |
 | `mcp.json` 中的 `seep` / `js-reverse` / `playwright` | **你自己添加的** MCP 条目（如 `ida`、`x64dbg`） |
 | `settings.json` 中工作台加入的 12 个 packages | `settings.json` 的其他字段与你自装的包 |
-| `lab-mode.flag` | 你自己的 `backup-*` 备份目录 |
+| `seep-system.md` / `seep-agents` 相关文件 | 你自己的 `backup-*` 备份目录 |
 
 > MCP 条目采取**外科手术式**判定：只有 `args` 确实指向工作台组件
 > （如 `seep_mcp_server.py`）时才认为归工作台所有，避免误删。
@@ -305,7 +305,7 @@ powershell -ExecutionPolicy Bypass -File .\setup\uninstall.ps1
 | `-KeepPrompts` / `--keep-prompts` | 保留提示词与扩展 |
 | `-KeepMcp` / `--keep-mcp` | 保留 `mcp.json` 中的工作台条目 |
 | `-KeepPackages` / `--keep-packages` | 保留 `settings.json` 中的工作台 packages |
-| `-KeepLabFlag` / `--keep-lab-flag` | 保留 `lab-mode.flag` |
+| `-KeepLabFlag` / `--keep-lab-flag` | 保留历史 `lab-mode.flag`（兼容旧版本） |
 | `-Purge` / `--purge` | 同时清理历史 `backup-*` 与生成的配置 |
 
 ### 5. 误删了怎么恢复
