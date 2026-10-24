@@ -12,6 +12,35 @@
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-10-24
+
+### 新增
+
+- **🔌 PE 引擎统一收口进 `seep` MCP（23 → 27 工具）**：
+  - `seep_pe_triage`：一次过 PE 体检（节区/熵、导入导出、TLS、资源、PDB、CLR、校验和比对、保护信号）。
+  - `seep_pe_aob_scan`：AOB 特征码定位 + `unique` / `ambiguous` / `pervasive` / `no-match` 裁决，支持 `across` 跨版本命中数对比。
+  - `seep_pe_diff`：归一化易变头字段（TimeDateStamp / CheckSum）后的构建差分，差异区间映射回 RVA。
+  - `seep_pe_patch`：可验证等长补丁（校验和重算 + 写盘后逐字节回读），支持 `dry_run`。
+  - 四个工具与 `seep_r2_*` / `seep_apk_*` 保持同一返回风格与命名规范；`seep_status` 新增 `pe_engine_exe_reverse` 组件状态。
+  - 实现方式为**薄包装**：不重写引擎，只做参数校验、路径解析（兼容工作台内嵌 / 上游镜像 / 已安装技能三种布局）、输出有界截断与错误归一化。
+
+### 安全护栏（工具层强制，不依赖模型自觉）
+
+- `seep_pe_patch` 拒绝 `out_path == pe_path`（原地覆盖一律拒绝）。
+- 非 `dry_run` 时必须显式给出 `out_path`；`at_rva` / `at_offset` / `pattern` 三选一，多给或少给都拒绝。
+- `expect=` 与实际字节不符时底层脚本直接中止，**且不产生输出文件**（已验证）。
+- 四个 PE 工具中只有 `seep_pe_patch` 会写盘，其余三个严格只读。
+
+### 验证记录（observed）
+
+- 工具注册数：**23 → 27**（`seep_pe_triage` / `seep_pe_aob_scan` / `seep_pe_diff` / `seep_pe_patch` 均已注册）。
+- `seep_status()` 正确报告 `pe_engine_exe_reverse.status = Ready` 并给出解析到的 scripts 路径。
+- 功能实测（合成 PE fixture）：
+  - `seep_pe_triage` → 完整报告（校验和 match、5 个节区、保护信号 4 条）；
+  - `seep_pe_aob_scan` → 植入两处 → 正确裁决 `ambiguous`，并列出 `0x410` / `0x424` 两个命中；
+  - `seep_pe_diff` → 自身对自身 → 只报告被归一化的易变字段，无内容差异；
+  - `seep_pe_patch` → 原地覆盖/缺 out/双定位器/无定位器四种误用全部被拒；`dry_run` 正确预览；实际落盘后 `checksum recomputed` + `every patched byte re-read from the written file`；`expect` 不匹配时中止且**未创建输出文件**。
+
 ## [1.8.0] - 2026-10-24
 
 ### 新增

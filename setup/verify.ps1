@@ -280,7 +280,7 @@ Test-CheckItem "MCP" "核心服务端脚本 (seep_mcp_server.py 语法自洽)" {
             $LASTEXITCODE -eq 0
         } else { $true }
     } else { $false }
-} "seep_mcp_server.py 丢失或存在 Python 语法解析错误" "23 个原生工具定义" "$ToolDir\mcp\seep_mcp_server.py"
+} "seep_mcp_server.py 丢失或存在 Python 语法解析错误" "27 个原生工具定义" "$ToolDir\mcp\seep_mcp_server.py"
 
 Test-CheckItem "工具箱" "Jadx 反编译引擎 (jadx-1.5.6 完整就绪)" {
     $j = Join-Path $ToolsDir 'jadx\lib\jadx-1.5.6-all.jar'

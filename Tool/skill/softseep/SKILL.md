@@ -162,12 +162,12 @@ metadata:
 | | **ida-reverse** | `~/.pi/agent/skills/ida-reverse/SKILL.md` | IDA 自动唤醒 + 联动 |
 | | client-license-validation-bypass | `Tool/client-license-validation-bypass/SKILL.md` | 许可校验专项 |
 | | Tool/safe/skills（5 个） | `Tool/safe/skills/` | radare2 / reverse-engineering / mcp-js-reverse-playbook 等 |
-| **MCP** | **seep**（22 工具） | `seep_r2_*` / `seep_apk_*` / `seep_kb_*` | 二进制 + APK + 知识库 |
+| **MCP** | **seep**（27 工具） | `seep_r2_*` / `seep_pe_*` / `seep_apk_*` / `seep_kb_*` | 二进制 + **PE 引擎** + APK + 知识库 |
 | | **ida**（~243 工具） | `mcp_ida_*` | 深度反编译 / 交叉引用 |
 | | **playwright** | 浏览器工具 | Web / JS 审计 |
 | **脚本** | `Tool/scripts/` | `case-init.ps1` / `trigger_ida_mcp.ps1` / `refresh-tool-index.ps1` | 建档 / IDA 唤醒 / 自检 |
 | | `Tool/scripts/apk/` | `decode.ps1` / `rebuild-sign-install.ps1` / `frida-run.ps1` | APK 三件套 |
-| | **`exe-reverse/scripts/`** | `doctor.py` / `pe_triage.py` / `pepatch.py` / `aob_scan.py` / `pe_diff.py` / `fold.py` | **PE 体检 / 等长补丁 / 特征码 / 差分 / 大输出摘要** |
+| | **`exe-reverse/scripts/`** | 优先走 MCP：`seep_pe_triage` / `seep_pe_aob_scan` / `seep_pe_diff` / `seep_pe_patch`；其余 `doctor.py` / `fold.py` 直接跑 | **PE 体检 / 等长补丁 / 特征码 / 差分 / 大输出摘要** |
 | **知识库** | reverselab | `Tool/reverselab/kb/`（316 文件） | 攻防方法论 |
 | | seep KB | `seep_kb_search` / `_read` / `_checklist` / `_payloads` | 在线检索 |
 | **工具资产** | aotopsy | `Tool/aotopsy/` | Flutter AOT 分析 |

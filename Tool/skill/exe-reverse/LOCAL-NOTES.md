@@ -73,6 +73,20 @@
 
 ## 5. 可执行引擎（16 个脚本，纯标准库）
 
+> **优先走 MCP 收口**：工作台的 `seep` MCP 已把四个最常用的 PE 操作包装成工具，
+> 无需拼路径、无需走终端：
+>
+> | MCP 工具 | 对应脚本 | 读/写 |
+> | :--- | :--- | :--- |
+> | `seep_pe_triage` | `pe_triage.py` | 只读 |
+> | `seep_pe_aob_scan` | `aob_scan.py` | 只读 |
+> | `seep_pe_diff` | `pe_diff.py` | 只读 |
+> | `seep_pe_patch` | `pepatch.py`（强制显式 out，拒绝原地覆盖） | **写** |
+>
+> 其余脚本（`doctor.py` / `hwprobe.py` / `plan.py` / `preflight.py` / `fold.py` /
+> `trace_reduce.py` / `scan_leaks.py` / `make_fixture_pe.py` / `dart_snapshot_strings.py` /
+> `capabilities.py` / `gate_probe.js`）仍直接命令行调用。
+
 | 脚本 | 用途 | 写盘 |
 | :--- | :--- | :--- |
 | `peutil.py` | 零依赖 PE 解析库（RVA↔偏移、导入导出、资源、TLS、重定位、微软校验和、逐节熵） | 否 |

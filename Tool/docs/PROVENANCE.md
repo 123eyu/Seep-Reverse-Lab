@@ -226,7 +226,8 @@ Android(5)    seep_apk_info · _decompile · _unpack · _smali_search · _gen_ho
 
 ```
 seep_kb_* 四个工具   →  Tool/mcp/Tool/reverselab/kb/（289 篇）
-seep_r2_* 八个工具   →  Tool/mcp/Tool/safe/radare2/bin/
+seep_r2_* 九个工具   →  Tool/mcp/Tool/safe/radare2/bin/
+seep_pe_* 四个工具   →  Tool/skill/exe-reverse/scripts/（纯标准库 PE 引擎）
 seep_apk_* 五个工具  →  Tool/mcp/Tool/safe/jadx/ + apktool/
 seep_apk_gen_hook   →  Tool/mcp/Tool/safe/hook-mcp/templates/
 ida MCP              →  自备 IDA Pro + Tool/mcp/Tool/safe/ida-pro-mcp/

@@ -100,7 +100,7 @@ Claude Code 原生支持项目级上下文（`CLAUDE.md`）与项目级 MCP 注�
    ```text
    /mcp
    ```
-   检查 `seep` 服务是否显示为绿色 `connected`，且暴露出 23 个工具。
+   检查 `seep` 服务是否显示为绿色 `connected`，且暴露出 27 个工具。
 5. **执行一键校验**：
    在 Claude 对话框直接发送：
    ```text

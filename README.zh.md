@@ -57,7 +57,7 @@
 
 | 痛点 | 解决方案 |
 |---|---|
-| 🔧 **工具链高度碎片化** | 23 个 MCP 工具封装 Radare2/JADX/Apktool/Frida，统一调度，零手动切换 |
+| 🔧 **工具链高度碎片化** | 27 个 MCP 工具封装 Radare2/JADX/Apktool/Frida/PE 引擎，统一调度，零手动切换 |
 | 🧠 **大模型缺乏决断逻辑** | `softseep` 总控：两级自动判型（平台 × 9 类业务）+ 七道门决策树 |
 | 🛡️ **云端模型频繁拒绝** | 三层保险：底座级 `BLOCK_NONE` 注入 + 动态口语合规转译 + 推理级思维重定向 |
 | 📚 **实战经验无法沉淀** | 289 篇战术实战笔记 + 14 大脱敏工业范式 + "先查知识库再动手"强制纪律 |
@@ -88,7 +88,7 @@
           │                │                  │
           ▼                ▼                  ▼
     seep MCP          IDA Pro MCP         知识库检索
-    23 个工具          (可选联动)          289 篇战术笔记
+    27 个工具          (可选联动)          289 篇战术笔记
     (R2/JADX/                             (Zero-Waste Recon)
      Apktool/Frida)
           │
@@ -179,7 +179,7 @@ Seep\ (251 MB)
 │   │   └── safe-skills\           ← 5 个独立战术工具包
 │   │
 │   ├── mcp\                       ← MCP 服务引擎
-│   │   ├── seep_mcp_server.py     ← 核心服务端，23 个底层分析工具
+│   │   ├── seep_mcp_server.py     ← 核心服务端，27 个底层分析工具
 │   │   └── Tool\                  ← ⚠️ 硬编码相对路径，禁止重命名/搬移
 │   │       ├── safe\              ← 物理内置工具箱
 │   │       │   ├── jadx\          ← 75 MB（v1.5.6）
@@ -226,7 +226,7 @@ Seep\ (251 MB)
 
 ## 🛠️ MCP 工具矩阵
 
-自研 `seep` MCP 服务暴露 **23 个原生工具**，分五大功能组：
+自研 `seep` MCP 服务暴露 **27 个原生工具**，分六大功能组：
 
 | 分类 | 工具 | 核心功能 | 上下文控制 |
 |---|---|---|---|
@@ -241,6 +241,10 @@ Seep\ (251 MB)
 | | `seep_r2_diff` | 两份二进制代码 / Hex 差分 | — |
 | | `seep_r2_asm` | 汇编 ↔ 机器码互转 | — |
 | | `seep_r2_cmd` | 底层 Radare2 管道命令 | — |
+| **Windows PE** | `seep_pe_triage` | PE 一次过体检：节区/熵、导入表、PDB、CLR、校验和、保护信号 | — |
+| | `seep_pe_aob_scan` | AOB 特征码定位 + `unique` / `ambiguous` / `pervasive` 裁决 | `limit=` |
+| | `seep_pe_diff` | 跨版本差分（归一化易变头字段，差异映射回 RVA） | — |
+| | `seep_pe_patch` | 可验证等长补丁：校验和重算 + 写盘后逐字节回读 | `dry_run=` |
 | **Android 逆向** | `seep_apk_info` | APK 清单 / 权限 / 签名（免 Java）| — |
 | | `seep_apk_decompile` | JADX 全量 Java 源码反编译 | — |
 | | `seep_apk_unpack` | Apktool 资源 + Smali 解包 | — |
@@ -254,6 +258,8 @@ Seep\ (251 MB)
 | | `seep_auto_triage` | 未知样本全量自动体检 | — |
 | | `seep_gen_security_report` | 三段式合规安全报告生成 | — |
 
+> 💡 **PE 引擎护栏**：`seep_pe_patch` 拒绝原地覆盖、默认拒绝改变长度、`expect=` 与实际字节不符时直接中止。四个 PE 工具中只有 `seep_pe_patch` 会写盘，其余三个只读。
+>
 > 💡 **上下文预算控制（v1.1）**：`seep_r2_decompile` 使用 `output_mode=fold` 可减少约 60% Token 消耗；`summary` 模式减少约 90%。使用 `seep_r2_xrefs` 替代原始 `axt` 命令，避免数百条引用直接灌满上下文窗口。
 
 ---
