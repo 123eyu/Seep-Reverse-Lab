@@ -213,18 +213,27 @@ Test-CheckItem "扩展"   "底层安全放行与 Lab 状态机扩展 (.ts)" {
 # -----------------------------------------------------------------------------
 # 4. 技能系统完备性 (Skills System)
 # -----------------------------------------------------------------------------
-Write-Host "`n[4/9] 🛠️ 逆向工程专业技能库 (Skills - 9大组件)" -ForegroundColor White
-Test-CheckItem "Skill" "核心总控调度器 (softseep 包含 8 大专题库)" {
+Write-Host "`n[4/9] 🛠️ 逆向工程专业技能库 (Skills - 10大组件)" -ForegroundColor White
+Test-CheckItem "Skill" "核心总控调度器 (softseep 包含 10 大专题库)" {
     $r = Join-Path $localSkills 'softseep\references'
     (Test-Path (Join-Path $localSkills 'softseep\SKILL.md')) -and 
-    (Test-Path $r) -and ((Get-ChildItem $r -Filter '*.md').Count -ge 8)
-} "softseep 或其 references 目录不完整" "SKILL.md + ≥8 refs" "$localSkills\softseep"
+    (Test-Path $r) -and ((Get-ChildItem $r -Filter '*.md').Count -ge 10)
+} "softseep 或其 references 目录不完整" "SKILL.md + ≥10 refs" "$localSkills\softseep"
 
 Test-CheckItem "Skill" "移动端逆向全链路 (apkseep 包含 45 篇规范与 56 脚本)" {
     $r = Join-Path $localSkills 'apkseep\references'
     $s = Join-Path $localSkills 'apkseep\scripts'
     (Test-Path (Join-Path $localSkills 'apkseep\SKILL.md')) -and (Test-Path $r) -and (Test-Path $s)
 } "apkseep 工程不完整" "SKILL.md + 45 refs + 56 scripts" "$localSkills\apkseep"
+
+Test-CheckItem "Skill" "Windows PE 深水区 (exe-reverse 包含 41 篇规范与 16 脚本)" {
+    $r = Join-Path $localSkills 'exe-reverse\references'
+    $s = Join-Path $localSkills 'exe-reverse\scripts'
+    (Test-Path (Join-Path $localSkills 'exe-reverse\SKILL.md')) -and
+    (Test-Path $r) -and (Test-Path $s) -and
+    ((Get-ChildItem $r -Recurse -Filter '*.md').Count -ge 41) -and
+    ((Get-ChildItem $s -File).Count -ge 16)
+} "exe-reverse 工程不完整，请重跑 setup\install-pi.ps1" "SKILL.md + 41 refs + 16 scripts" "$localSkills\exe-reverse"
 
 Test-CheckItem "Skill" "IDA Pro 自动化联动 (ida-reverse)" {
     Test-Path (Join-Path $localSkills 'ida-reverse\SKILL.md')

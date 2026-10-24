@@ -83,7 +83,7 @@
 │  softseep  总控调度器                                            │
 │  ① 平台判型 → Windows PE / Android APK / Linux ELF / Web        │
 │  ② 业务判型 → 9 大范式 × 七道门（G0–G6 决策树）                  │
-│  ③ 路由分发 → apkseep / ida-reverse / seep MCP / 知识库          │
+│  ③ 路由分发 → exe-reverse / apkseep / ida-reverse / seep MCP / 知识库 │
 └─────────┬────────────────┬──────────────────┬─────────────────────┘
           │                │                  │
           ▼                ▼                  ▼
@@ -148,6 +148,7 @@ Agent 自主完成：
 - ⚡ **DeepSeek Harness (DSH) 秒级自愈套件**：解决官方与插件在 Windows 上的扫描超时与端口冲突，4 秒极速冷启动，自动提取 Token URL 与 MCP 在线核验 (`start-dsh.ps1` / `stop-dsh.ps1`)
 - 🛡️ **实测抗拒答综合防线**：Gemini-Safe 提示词语义重塑（`gemini-safe.flag`，377 token 拒答 → 3300 字深度分析）、L1 拦截器动态可观测日志（`l1-log.flag`）、底座级 `BLOCK_NONE` 注入
 - 🔌 **离线预置全量内置**：所有工具链物理打包（251 MB），部署后零外网依赖
+- 🪟 **Windows PE 深水区引擎（`exe-reverse`）**：41 篇带门禁的参考文档 + **16 个零依赖 Python 引擎** —— `peutil`（RVA↔偏移、导入导出/TLS/重定位、微软校验和、逐节熵）、`pe_triage`、`pepatch`（等长补丁 + 校验和重算 + **写盘后逐字节回读**）、`aob_scan`（unique/ambiguous/pervasive 裁决）、`pe_diff`、`hwprobe`、`trace_reduce`（可选 SMT 证明）、`fold`。覆盖保护壳、虚拟化/控制流平坦化、.NET、Unity IL2CPP、打包 Python、内核驱动、硬件追踪与 Hypervisor 观测
 
 ---
 
@@ -169,8 +170,9 @@ Seep\ (251 MB)
 ├── CHANGELOG.md                   ← 面向用户的版本变更日志
 │
 ├── Tool\
-│   ├── skill\                     ← 9 大逆向专业技能
-│   │   ├── softseep\              ← ⭐ 总控调度器（路由 + 8 专题按需库）
+│   ├── skill\                     ← 10 大逆向专业技能
+│   │   ├── softseep\              ← ⭐ 总控调度器（路由 + 10 专题按需库）
+│   │   ├── exe-reverse\           ← Windows PE 深水区（41 篇规范 + 16 个引擎）
 │   │   ├── apkseep\               ← Android 全链路逆向（115 个工程文件）
 │   │   ├── ida-reverse\           ← IDA Pro 自动化联动
 │   │   ├── client-license-validation-bypass\ ← 跨运行时卡密/授权攻防手册
@@ -195,10 +197,11 @@ Seep\ (251 MB)
 │   │   └── extensions\            ← BLOCK_NONE 注入 + 口语合规转译
 │   │
 │   ├── cases\                     ← 14 大脱敏工业案例库（项目 A ~ N，含版本演进归档 v2）
-│   ├── upstream\                  ← 上游溯源验证层（3大开源项目完整镜像）
+│   ├── upstream\                  ← 上游溯源验证层（4 大开源项目完整镜像）
 │   │   ├── apk-reverse\           ← newliver666/apk-reverse（Android 逆向与离线测试集）
 │   │   ├── open-tgtylab\          ← GeniusHu-tgty/Open-tgtylab（攻防流水线与提效路由）
-│   │   └── open-reverselab\       ← LING71671/open-reverselab（知识库、boards与工具生态）
+│   │   ├── open-reverselab\       ← LING71671/open-reverselab（知识库、boards 与工具生态）
+│   │   └── exe-reverse\           ← dabao1955/exe-reverse（Windows PE 深水区证据记录与回归套件）
 │   ├── docs\                      ← 工程参考文档
 │   └── scripts\                   ← 工作流自动化脚本
 │       └── compliance-relay\      ← 🌐 链路层合规转译中继（纯标准库，三协议）
@@ -317,7 +320,7 @@ powershell -ExecutionPolicy Bypass -File .\setup\update.ps1
 
 ### 4b. 上游仓库定点隔离同步（防外溢机制）
 
-工作台整合了多个开源上游项目（如 `apk-reverse`、`open-tgtylab`、`open-reverselab`）。为了解决上游作者在 GitHub 更新后手动合并繁琐且易污染其他模块的问题，工作台确立了**「单源单目录、零外溢」**的声明式同步机制：
+工作台整合了四个开源上游项目（`apk-reverse`、`open-tgtylab`、`open-reverselab`、`exe-reverse`）。为了解决上游作者在 GitHub 更新后手动合并繁琐且易污染其他模块的问题，工作台确立了**「单源单目录、零外溢」**的声明式同步机制：
 
 - **声明式规则清单**：`setup/upstream-rules.json` 严格绑定每一个上游仓库的唯一目标目录与边界白名单；
 - **物理防外溢断言**：`setup/sync-upstream.py` 纯标准库引擎在写入前执行 `realpath` 前缀物理路径断言，若 A 仓库的内容试图写到 B/C 目录或主工程，立即抛出 `SpilloverSecurityViolation` 异常并熔断拦截；
@@ -417,6 +420,9 @@ powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1          # 再执
 - 自动化重打包：STORED 资源 + 4 字节 Zipalign + v1+v2+v3 签名
 
 ### 3. 二进制 / Native 逆向（PE / ELF / Mach-O）
+- **`exe-reverse` 深水区层**：PE 结构与体检、等长补丁（校验和重算 + 写盘回读）、AOB 特征码唯一性裁决、跨版本差分、壳/保护识别、虚拟化与控制流平坦化、算法还原、符号执行
+- **运行时专项路线**：托管 .NET（含混淆）、Unity IL2CPP 元数据、打包 Python（PyInstaller / Nuitka / pyarmor）、Flutter Dart AOT、内核驱动
+- **硬件观测层**：硬件断点、Intel PT 指令追踪、ETW、Hypervisor 辅助观测 —— 用于“所有软件 hook 都被检测”的目标
 - Radare2 无头模式：架构识别、熵扫描、符号提取、类 C 伪代码
 - IDA Pro MCP 全链路：Hex-Rays 反编译、交叉引用、结构体恢复
 - 反调试对抗：故意崩溃 Stub、`svc` 直接系统调用、内核级驱动检测（参见 `MANUAL/ANTI-DEBUG.md`）
@@ -457,6 +463,7 @@ powershell -ExecutionPolicy Bypass -File ./setup/uninstall.ps1          # 再执
 - 特别致谢开源项目 [**newliver666/apk-reverse**](https://github.com/newliver666/apk-reverse)（MIT License）提供的 Android 逆向门控范式与验证体系。
 - 特别致谢开源项目 [**GeniusHu-tgty/Open-tgtylab**](https://github.com/GeniusHu-tgty/Open-tgtylab)（GPL-3.0 License）提供的安全实验室架构与 Zero-Waste Recon 攻防提效体系。
 - 特别致谢开源项目 [**LING71671/open-reverselab**](https://github.com/LING71671/open-reverselab)（GPL-3.0 License）提供的实战攻防知识库、攻击网拓扑与 MCP 自动化工具生态。
+- 特别致谢开源项目 [**dabao1955/exe-reverse**](https://codeberg.org/dabao1955/exe-reverse)（MIT License）提供的 Windows PE 深水区方法论、带门禁的作业流程与零依赖 PE 引擎。
 - 感谢 [**LINUX DO**](https://linux.do/) 社区提供的高质量技术交流氛围。
 
 ---

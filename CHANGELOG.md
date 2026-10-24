@@ -12,6 +12,41 @@
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-10-24
+
+### 新增
+
+- **🪟 Windows PE 深水区执行层 `exe-reverse`（第 10 个技能）**：
+  - 纳入 `https://codeberg.org/dabao1955/exe-reverse`（MIT，上游 SHA `c6ef186`），**上游文件零修改**，仅加 `ATTRIBUTION` 注释块与本地 `LOCAL-NOTES.md`，因此上游同步始终是纯拷贝。
+  - 41 篇带门禁的参考文档 + **16 个零依赖 Python 引擎**（纯标准库）：
+    `peutil`（RVA↔偏移双向、导入/导出/资源/TLS/重定位/PDB、微软算法校验和、逐节熵）、
+    `pe_triage`、`pepatch`（等长补丁 + 歧义守卫 + 校验和重算 + **写盘后逐字节回读**）、
+    `aob_scan`（unique / ambiguous / pervasive / no-match 裁决）、`pe_diff`、`hwprobe`、`capabilities`、
+    `plan`、`preflight`、`fold`、`trace_reduce`（可选 SMT 证明）、`scan_leaks`、`make_fixture_pe`、
+    `dart_snapshot_strings`、`gate_probe.js`。
+  - 覆盖：PE 结构、补丁纪律、AOB 签名、完整性校验、保护壳、虚拟化/控制流平坦化、算法还原、
+    符号执行、.NET 托管程序集、Unity IL2CPP、打包 Python、Flutter Dart AOT、内核驱动、
+    硬件追踪与 Hypervisor 观测。
+- **🚦 三层门禁命名空间消歧（`gate-crosswalk.md`）**：
+  - 发现 `softseep` / `apkseep` / `exe-reverse` 各自使用 `G1–G4` 但**同名不同义**（同一个 `G2` 在三处分别指“写入判死归因 / 环境真实性 / 主机真实性”），已建立 `AUTH-G0…G4` / `APK-G1…G4` / `EXE-G1…G5` 前缀约定与执行顺序图，并将“裸 G2 视为歧义”写入 SKILL.md 硬规则。
+- **🌉 Windows 深水区中文桥接（`windows-deep.md`）**：
+  - 中文大白话 → `exe-reverse` 参考文件的唯一映射表（补丁/壳/虚拟化/.NET/IL2CPP/Python 打包/驱动/硬件追踪/算法还原）。
+  - 明确与 `windows-sop.md` 的分工：后者是**交付流水线**，前者是**机制字典**。
+- **🔄 上游第 4 条声明式规则**：`setup/upstream-rules.json` 新增 `exe-reverse` → `Tool/upstream/exe-reverse`（`preserve_local: []`），Codeberg 源已通过 `git ls-remote` 可达性验证，防外溢单测 6/6 通过。
+
+### 变更
+
+- `softseep` 路由矩阵新增 Windows 深水区 6 类意图（补丁工程 / 保护壳·虚拟化 / 托管程序集 / 运行时捆绑 / 内核·硬件层 / 模块开发），并补充平台判型信号（`.msi` / `.node` / `GameAssembly.dll` / `python3xx.dll` / `_internal` / `pyarmor_runtime`）。
+- `softseep` references 由 8 篇增至 **10 篇**；体检技能项由 9 项增至 **10 项**，`verify.ps1` / `verify.sh` 新增 `exe-reverse` 校验（SKILL.md + ≥41 refs + ≥16 scripts）。
+- `README.md` / `README.zh.md` / `PROVENANCE.md` / `DEPLOYMENT-CHECKLIST.md` / `CLAUDE.md` / `AGENTS.md` / `DEPLOYMENT.md` 全面同步第 10 个技能与第 4 个上游。
+- 体检新增 Windows 无 Python-in-PATH 时的**常见安装路径自愈探测**（`C:\Program Files\Python3xx`、`%LOCALAPPDATA%\Programs\Python\Python3xx`），消除“明明装了 Python 却报 MISSING”的误判。
+
+### 验证记录（observed）
+
+- `scripts/doctor.py`：**16/16 脚本可运行**；本机 28 项能力中 14 项 `ok`，14 项 `BLK`（缺调试器/IDA/测试签名，属宿主限制而非缺陷）。
+- 端到端往返：`make_fixture_pe` → `pe_triage` → `aob_scan`（植入两处 → 正确报 `ambiguous`）→ `pepatch`（dry-run → 落盘）→ 独立复核：原文件 SHA256 不变、补丁文件校验和 `0x10bad → 0x1181` 重算正确、RVA `0x1010` 处字节确为 `90 90 90`。
+- 红线取证：上游 `0 strong / 16 weak / 102 suppressed`，`RESULT=clean`；`docs/tool-acquisition.md` 明确写明 “No cracked builds, no key generators, no patched installers”；外部链接仅官方厂商文档 / GitHub / Microsoft Learn。
+
 ## [1.7.0] - 2026-10-23
 
 ### 新增

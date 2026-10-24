@@ -45,6 +45,7 @@
 > - Mobile reverse engineering methodology & verification test suite referenced from: [**newliver666/apk-reverse**](https://github.com/newliver666/apk-reverse) (MIT License).
 > - Security research lab framework, Zero-Waste Recon signal routing & agent execution protocols referenced from: [**GeniusHu-tgty/Open-tgtylab**](https://github.com/GeniusHu-tgty/Open-tgtylab) (GPL-3.0 License).
 > - Reverse engineering knowledge base, attack graph boards & MCP automation ecosystem referenced from: [**LING71671/open-reverselab**](https://github.com/LING71671/open-reverselab) (GPL-3.0 License).
+> - Windows PE deep-dive methodology, gated procedure & dependency-free PE engine referenced from: [**dabao1955/exe-reverse**](https://codeberg.org/dabao1955/exe-reverse) (MIT License).
 > - Community support & technical discussions: [**LINUX DO**](https://linux.do/).
 
 ---
@@ -85,7 +86,7 @@ User Input (plain language — "bypass the premium check in FooBar.apk")
 │  softseep  Master Orchestrator                                    │
 │  ① Platform  →  Windows PE / Android APK / Linux ELF / Web       │
 │  ② Task Type →  9 Paradigms × 7 Gates (G0–G6 decision tree)      │
-│  ③ Route     →  apkseep / ida-reverse / seep MCP / KB            │
+│  ③ Route     →  exe-reverse / apkseep / ida-reverse / seep MCP / KB │
 └────────┬──────────────────┬────────────────────┬──────────────────┘
          │                  │                    │
          ▼                  ▼                    ▼
@@ -150,6 +151,7 @@ The agent autonomously:
 - ⚡ **DeepSeek Harness (DSH) Self-Healing Launcher**: 4s fast cold-start with automated zombie cleanup, web token URL extraction, and MCP verification suite (`start-dsh.ps1` / `stop-dsh.ps1`).
 - 🛡️ **Measured Anti-Refusal Defense**: Gemini-safe prompt reshaping (`gemini-safe.flag`), L1 observable decision logging (`l1-log.flag`), and native `BLOCK_NONE` payload gating.
 - 🔌 **Offline-Ready**: All toolchains pre-bundled (251 MB), zero network dependencies after setup
+- 🪟 **Windows PE Deep-Dive Engine (`exe-reverse`)**: 41 gated references + **16 dependency-free Python engines** — `peutil` (RVA↔offset, imports/exports/TLS/relocs, MS checksum, per-section entropy), `pe_triage`, `pepatch` (equal-length + checksum recompute + **byte re-read from disk**), `aob_scan` (unique/ambiguous/permissive verdict), `pe_diff`, `hwprobe`, `trace_reduce` (+ optional SMT proof), `fold`. Covers packers, virtualization/flattening, .NET, Unity IL2CPP, packaged Python, kernel drivers, hardware tracing and hypervisor observation.
 
 ---
 
@@ -171,8 +173,9 @@ Seep\ (251 MB)
 ├── CHANGELOG.md                   ← User-facing release notes
 │
 ├── Tool\
-│   ├── skill\                     ← 9 specialized reverse engineering skills
-│   │   ├── softseep\              ← ⭐ Master orchestrator (Router + 8 on-demand references)
+│   ├── skill\                     ← 10 specialized reverse engineering skills
+│   │   ├── softseep\              ← ⭐ Master orchestrator (Router + 10 on-demand references)
+│   │   ├── exe-reverse\           ← Windows PE deep-dive: 41 refs + 16 stdlib engines
 │   │   ├── apkseep\               ← End-to-end Android APK/DEX/SO skill (115 files)
 │   │   ├── ida-reverse\           ← IDA Pro automated spawning & MCP coordination
 │   │   ├── client-license-validation-bypass\ ← Cross-runtime license attack playbook
@@ -198,10 +201,11 @@ Seep\ (251 MB)
 │   │   └── extensions\            ← BLOCK_NONE injection + terminology mapping
 │   │
 │   ├── cases\                     ← 14 desensitized industrial paradigm projects (A ~ N, incl. version-evolution archive v2)
-│   ├── upstream\                  ← Upstream verification & attribution layer (3 Full mirrors)
+│   ├── upstream\                  ← Upstream verification & attribution layer (4 full mirrors)
 │   │   ├── apk-reverse\           ← newliver666/apk-reverse (Android RE & offline test suite)
 │   │   ├── open-tgtylab\          ← GeniusHu-tgty/Open-tgtylab (Security lab framework & workflows)
-│   │   └── open-reverselab\       ← LING71671/open-reverselab (Knowledge base, boards & MCP ecosystem)
+│   │   ├── open-reverselab\       ← LING71671/open-reverselab (Knowledge base, boards & MCP ecosystem)
+│   │   └── exe-reverse\           ← dabao1955/exe-reverse (Windows PE evidence record & regression suite)
 │   ├── docs\                      ← Engineering reference docs
 │   └── scripts\                   ← Workspace automation scripts
 │       └── compliance-relay\      ← 🌐 Transport-layer compliance relay (stdlib-only, 3 protocols)
@@ -320,7 +324,7 @@ It will: stash local changes → `git pull` → print the changelog → back up 
 
 ### 4b. Upstream Declarative Sync & Zero-Spillover Architecture
 
-Seep packages mirrors of upstream open-source repositories (`apk-reverse`, `open-tgtylab`, `open-reverselab`). To eliminate manual merging and prevent upstream updates from polluting unrelated modules, the workbench enforces a **strict-boundary declarative sandboxing architecture**:
+Seep packages mirrors of four upstream open-source repositories (`apk-reverse`, `open-tgtylab`, `open-reverselab`, `exe-reverse`). To eliminate manual merging and prevent upstream updates from polluting unrelated modules, the workbench enforces a **strict-boundary declarative sandboxing architecture**:
 
 - **Declarative Rule Manifest**: `setup/upstream-rules.json` strictly binds each upstream repo to its own target directory and allowed boundary whitelist.
 - **Physical Zero-Spillover Gate**: `setup/sync-upstream.py` (pure stdlib) asserts real canonical paths before copying. If upstream A tries to write into directory B, directory C, or the main project, it throws a `SpilloverSecurityViolation` and aborts.
@@ -420,6 +424,9 @@ Deactivate: exit lab
 - Repack pipeline: STORED `resources.arsc` + 4-byte Zipalign + v1+v2+v3 signing
 
 ### 3. Binary / Native (PE / ELF / Mach-O)
+- **`exe-reverse` deep-dive layer**: PE structure & triage, equal-length patching with checksum recompute and post-write byte re-read, AOB signature uniqueness verdicts, build-to-build diff, protector/packer identification, virtualization & control-flow flattening, algorithm recovery, symbolic execution
+- **Runtime-specific routes**: managed .NET (incl. obfuscation), Unity IL2CPP metadata, packaged Python (PyInstaller / Nuitka / pyarmor), Flutter Dart AOT, kernel drivers
+- **Hardware-observation layer**: hardware breakpoints, Intel PT instruction tracing, ETW, hypervisor-assisted observation — for targets where every software hook is detected
 - Headless Radare2: architecture ID, entropy scan, symbol recovery, C-like decompilation
 - Full IDA Pro MCP integration: Hex-Rays decompilation, xrefs, struct recovery
 - Anti-tamper defeat: deliberate crash stubs, raw `svc` syscall detection, kernel anti-debug

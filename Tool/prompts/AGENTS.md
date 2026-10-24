@@ -81,7 +81,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\setup\verify.ps1 -Detailed
 ```
 - **输出规范**：
   读取校验输出后，Agent 必须根据 `MANUAL/DEPLOYMENT-CHECKLIST.md` 官方基准清单，向用户输出四栏 Markdown 校对看板：
-  1. **🛠️ 技能系统 (Skills - 9项)**：逐项列出【技能名】|【目标路径】|【期望文件数】|【实际状态 (🟢 READY / 🔴 MISSING)】；
+  1. **🛠️ 技能系统 (Skills - 10项)**：逐项列出【技能名】|【目标路径】|【期望文件数】|【实际状态 (🟢 READY / 🔴 MISSING)】；
   2. **🔌 MCP 服务引擎 (4大服务)**：逐项列出【服务名】|【期望工具数】|【实际连通性】|【状态 (🟢 READY / 🟡 DEGRADED)】（未装 IDA 时明确告知已自动降级为 Radare2 承接）；
   3. **🔧 物理内置工具箱**：Jadx (v1.5.6)、Radare2 (v6.2.2)、Apktool (v3.0.3) 及 289+ 知识库状态；
   4. **🚀 结论与开工指引**：全部核心项通过时告知：**“工作台处于 [READY / 完备就绪] 状态，重启终端后输入 lab： 即可开启测试。”**
