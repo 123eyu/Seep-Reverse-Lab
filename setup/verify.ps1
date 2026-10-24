@@ -310,6 +310,25 @@ Test-CheckItem "依赖" "Playwright 浏览器自动化依赖已解压 (playwrigh
 # 6. 环境运行时与第三方依赖配置
 # -----------------------------------------------------------------------------
 Write-Host "`n[6/9] ⚙️ 外部运行时与商业授权协同 (Runtime & Commercial)" -ForegroundColor White
+
+# 自动补全常见 Python 安装路径到临时 PATH（提高 Windows 环境自愈容错率）
+if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+    $pyCandidates = @(
+        'C:\Program Files\Python312',
+        'C:\Program Files\Python311',
+        'C:\Program Files\Python310',
+        "$env:LOCALAPPDATA\Programs\Python\Python312",
+        "$env:LOCALAPPDATA\Programs\Python\Python311",
+        "$env:LOCALAPPDATA\Programs\Python\Python310"
+    )
+    foreach ($cand in $pyCandidates) {
+        if (Test-Path (Join-Path $cand 'python.exe')) {
+            $env:Path = "$cand;$cand\Scripts;" + $env:Path
+            break
+        }
+    }
+}
+
 Test-CheckItem "运行时" "Python 解释器 (3.11+ 且可执行)" {
     $py = Get-Command python -ErrorAction SilentlyContinue
     $py -ne $null

@@ -12,7 +12,29 @@
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-23
+
 ### 新增
+
+- **🚀 现代 LSPosed 与 Vector 双模架构支持 (API 101+)**：
+  - 更新 `Tool/skill/apkseep/references/lsposed-and-modules.md`：
+    - 详述经典 XposedBridge (API 82) 与现代 Vector / libxposed (API 100/101/102) 差异（`META-INF/xposed/java_init.list`、`io.github.libxposed.api.XposedModule`、拦截器链式 Hooker 模型、`xposedscope`）；
+    - 制定第三方未知模块逆向分析 4 步 SOP（入口定位、作用域提取、混淆方法与特征指纹反查、JNI Native 挂钩剖析）；
+    - 引入动态 ClassLoader 构造 Hook 方案（针对动态解密 Dex、插件化与加壳应用）；
+    - 整合真机免逆向动态辅助武器库（算法助手 Algorithm Aide、SimpleHook、LSPilot）；
+    - 提供三大 AI 逆向协同 Prompt 模板（入口分析、混淆还原、Native 意图解析）。
+- **🛡️ KernelSU 内核级 Root 与 Systemless 深度防御与对抗**：
+  - 更新 `Tool/skill/apkseep/references/kernel-and-environment-hardening.md`：
+    - 引入 `preinit/preinit.conf`（SELinux 策略前阶段执行最高权限 `insmod`/`exec`/`write`）；
+    - 引入 `initrc/` 系统级 RC 脚本透明注入机制；
+    - 详述 Linux 内核原生 OverlayFS 机制（Whiteout `mknod c 0 0` 虚拟删除、Opaque 属性整块目录替换）；
+    - 解析 BusyBox ash 独立运行环境 (`ASH_STANDALONE=1`) 与 ZygiskNext 桥接规范。
+- **⚙️ 双模 LSPosed 脚手架引擎升级**：
+  - 增强 `Tool/skill/apkseep/scripts/lsposed_scaffold.py`：新增 `--api {legacy, modern}` 参数与 `--with-classloader-hook` 选项，一键生成经典 API 82 或现代 libxposed Vector API 101 骨架，并支持无 Gradle 极速编译链。
+- **📚 ReverseLab 攻防知识库扩展**：
+  - 新增 `09-lsposed-root/01-modern-lsposed-module-analysis.md` 与 `09-lsposed-root/02-kernelsu-root-mechanisms.md`，同步更新 `kb-index.json` 索引。
+- **🧠 总控判型与调度升级 (`softseep`)**：
+  - `Tool/skill/softseep/SKILL.md` 新增对 LSPosed、Xposed、Vector、KernelSU、APatch、Magisk 等大白话意图的自动判型与精准路由。
 
 - **🌐 上游定点隔离同步与防外溢体系 (Zero-Spillover Upstream Sync)**：
   - 新增 `setup/upstream-rules.json`：声明式上游规则清单，严格绑定每个上游仓库的唯一目标目录与白名单边界。

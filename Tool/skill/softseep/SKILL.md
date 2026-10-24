@@ -91,7 +91,7 @@ metadata:
 
 | 信号 | 平台 |
 | :--- | :--- |
-| `.apk` / `.aab` / `.dex` / `.so`(Android ABI) / `AndroidManifest.xml` / 用户说"apk·安卓·手机软件" | **Android** |
+| `.apk` / `.aab` / `.dex` / `.so`(Android ABI) / `AndroidManifest.xml` / `module.prop` / `xposed_init` / 用户说"apk·安卓·手机软件·LSPosed·KernelSU·Magisk" | **Android** |
 | `.exe` / `.dll` / `.sys` / PE 头 `MZ` / 用户说"exe·电脑软件·桌面软件" | **Windows** |
 | `.elf` / Linux 服务 / `\x7fELF` | **Linux** |
 | `.js` / `.asar` / Web 前端 / 用户说"网站·网页·接口·前端" | **Web/JS** |
@@ -112,6 +112,7 @@ metadata:
 | "是不是病毒" / "分析样本" / "行为" / "IOC" | **样本研判** | ida MCP + YARA |
 | "改界面文字" / "关于对话框" / "显示不对" | **UI 伪造** | `ui-verification.md` |
 | "过检测" / "反调试" / "反 hook" / "完整性校验" | **加固对抗** | `defense-in-depth.md` |
+| "LSPosed" / "Xposed" / "hook 模块" / "分析模块" / "Vector" / "KernelSU" / "APatch" / "Magisk" | **模块开发/逆向** | `apkseep` (`lsposed-and-modules` / `kernel-and-environment-hardening`) |
 | "出个报告" / "整理成果" / "测绘" | **测绘报告** | `project-paradigms.md`（报告模板） |
 | "看看这个 exe" / "分析下这个文件"（无明确动词） | **默认：测绘/分析** | `windows-sop.md` Step 1-2 |
 
@@ -135,6 +136,7 @@ metadata:
 | **样本研判** | ida MCP + YARA | `apkseep` | ida-reverse | — |
 | **UI 伪造** | `ui-verification` | — | — | — |
 | **加固对抗** | `defense-in-depth` | `apkseep`（anti-tamper） | — | — |
+| **模块开发/逆向** | — | `apkseep`（LSPosed / KernelSU） | — | — |
 
 ### 可调度的全部资源
 
